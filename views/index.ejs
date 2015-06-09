@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/css/bootstrap-theme.css" rel="stylesheet" type="text/css"/>
+        <link href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.1/css/bootstrap.css" rel="stylesheet" type="text/css"/>
+        <link rel="stylesheet" type="text/css" media="all" href="/css/styles.css" />
+    </head>
+    <body>
+        <div class="container" style="font-size: 20px">
+            <p><b>Click here to Logout </b> <a href="https://my107.iit.edu/cas/logout"> Logout!!</a></p>
+            <h2> Welcome to SAT Hadoop Cluster </h2><hr>
+            <p><%= message %></p>
+            
+            <hr>
+            <p> Use the form to upload new files </p>
+            <form id="upload" action="/api/uploadfile" method="POST" enctype="multipart/form-data">
+                <input type="hidden" id="MAX_FILE_SIZE" name="MAX_FILE_SIZE" value="300000" />
+                <label for="fileselect">Files to upload:</label>
+                <input type="file" id="fileselect" name="fileName" multiple="multiple"/>
+                <div id="filedrag">or drop files here</div>
+
+                <button type="submit">Submit</button>
+
+            </form>
+            <div id="messages">
+                <p>Status Messages</p>
+            </div>
+            <hr>
+            <p> Use the form to delete files </p>
+            <form method="POST" action="/app/deletefile">
+                Available data sets: <select name="filetodelete">
+                	<% datasets.forEach(function(file){ %>
+                		<option value="<%= file %>"><%= file %></option>
+                	<% }); %>
+                </select>
+                <input type="submit" value="Delete">
+            </form>
+                
+                <hr>
+            <p> Use the form to download files </p>
+            <form method="GET" action="/app/downloadfile">
+                Available data sets: <select name="filetodownload">
+                    <% datasets.forEach(function(file){ %>
+                		<option value="<%= file %>"><%= file %></option>
+                	<% }); %>
+                </select>
+                <input type="submit" value="Download">
+            </form>
+            <br><hr> <p> Use the form below to submit jobs </p>
+			<form id="upload" action="/app/submitjob" method="POST">
+                <label for="SelectNodes">Select Number of Nodes:</label>
+                <select class="form-control" name="optionnode">
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="8">8</option>
+                    <option value="16">16</option>
+                    <option value="32">32</option>
+                </select><br>
+                <label for="SelectJob">Select type of Job:</label>
+                <select name="optionjob">
+                    <% jobs.forEach(function(job){ %>
+                		<option value="<%= job %>">
+                			<%= job %>
+                		</option>
+                	<% }); %>
+                </select><br>
+                Available data sets: <select name="datasets">
+                    <% datasets.forEach(function(file){ %>
+            			<option value="<%= file %>"><%= file %></option>
+            		<% }); %>
+                </select>
+                <button type="submit">Submit</button>
+            </form>
+            
+        </div>
+
+        <script src="/js/filedrag.js"></script>
+    </body>
+</html>
