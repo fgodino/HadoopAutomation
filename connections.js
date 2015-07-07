@@ -21,7 +21,7 @@ var fs = require('fs'),
     AWS = require('aws-sdk'),
     util = require('util'),
     mongoose = require('mongoose'),
-    EventEmitter = require('events').EventEmitter;
+    EventEmitter = require('events').EventEmitter
 
 var Connections = function() { //Emmiter for async operations
     var self = this;
@@ -36,14 +36,25 @@ var Connections = function() { //Emmiter for async operations
 
     self.db = mongoose.createConnection(process.env.MONGODB_URL);
 
-    self.db.on('open', function() {
-        self.emit('connected');
-    });
+    aync.parallel([
+      function(cb) {
+        self.db.once('open', function() {
+          cb();
+        });
 
-    self.db.on('error', function(err) {
-        console.log(err);
+        self.db.once('error', function(err) {
+          console.log(err);
+          cb(err);
+        });
+      },
+      function (cb) {}
+        mqHelper.startExchange(url, function (connObj) {
+          self.rabbitConnection = connObj;
+          cb();
+        });
+      ], function (err) {
         self.emit('connected');
-    });
+      });
 };
 
 util.inherits(Connections, EventEmitter);
