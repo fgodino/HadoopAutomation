@@ -1,21 +1,3 @@
-/*
-  This module provides a singleton that, upon instantiation (i.e. the first time it is imported anywhere),
-  connects asynchronously to external services using the settings defined in the environment.
-  It stores references to those connections as member variables.
-
-  Once all connections have been established, resolves the Connections#connected promise.
-  Example usage:
-      connections = require('./connections.js');
-      connections.connected.then(doSomething());
-
-  Connections used to be an EventEmitter that would emit a 'connected' event when complete, but the event handler
-  swallows up exceptions, so that sucked.
-
-  Connections#curator
-      The mongoose Connection to the curator database
-  Connections#website
-      The mongoose Connection to the website database
-*/
 
 var fs = require('fs'),
     AWS = require('aws-sdk'),
@@ -61,6 +43,12 @@ var Connections = function() { //Emmiter for async operations
           cb(err);
         });
       }], function (err) {
+      function (cb) {}
+        mqHelper.startExchange(url, function (connObj) {
+          self.rabbitConnection = connObj;
+          cb();
+        });
+      ], function (err) {
         self.emit('connected');
       });
 };
