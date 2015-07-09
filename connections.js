@@ -21,6 +21,8 @@ var fs = require('fs'),
     AWS = require('aws-sdk'),
     util = require('util'),
     mongoose = require('mongoose'),
+    redis = require('redis'),
+    async = require('async'),
     EventEmitter = require('events').EventEmitter;
 
 var Connections = function() { //Emmiter for async operations
@@ -36,14 +38,31 @@ var Connections = function() { //Emmiter for async operations
 
     self.db = mongoose.createConnection(process.env.MONGODB_URL);
 
-    self.db.on('open', function() {
-        self.emit('connected');
-    });
+    self.redisDB = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
-    self.db.on('error', function(err) {
-        console.log(err);
+    async.parallel([
+      function(cb) {
+        self.db.once('open', function() {
+          cb();
+        });
+
+        self.db.once('error', function(err) {
+          console.log(err);
+          cb(err);
+        });
+      },
+      function (cb) {
+        self.redisDB.once('connect', function () {
+          cb();
+        });
+
+        self.redisDB.once('error', function () {
+          console.log(err);
+          cb(err);
+        });
+      }], function (err) {
         self.emit('connected');
-    });
+      });
 };
 
 util.inherits(Connections, EventEmitter);

@@ -12,8 +12,4 @@ router.get('/', function (req, res) {
 	});
 });
 
-router.get('/logout', function(req, res){
-  	res.redirect('https://mydev107.iit.edu/cas/logout');
-});
-
 module.exports = router;

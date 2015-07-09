@@ -11,11 +11,16 @@ var datasetSchema = mongoose.Schema({
     s3Key : String
 });
 
-datasetSchema.index({owner: 1, name: 1}, {unique: true});
 
 datasetSchema.pre('save', function (next) {
-	this.createdAt = Date.now();
-	next();
+    this.createdAt = Date.now();
+    next();
+});
+
+datasetSchema.index({owner: 1, name: 1}, {unique: true});
+datasetSchema.index({
+    owner : 'text',
+    name : 'text'
 });
 
 module.exports = connections.db.model('Dataset', datasetSchema);

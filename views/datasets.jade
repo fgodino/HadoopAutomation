@@ -1,0 +1,17 @@
+extends ./layout.jade
+
+block body
+	div.container-fluid
+		table.table.table-striped.table-bordered.table-hover
+			thead
+				tr
+					td Name
+					td Owner
+					td Visibility
+			tbody
+				each dataset in datasets
+					tr
+						td= dataset.name
+						td= dataset.owner
+						td=dataset.public ? 'PUBLIC' : 'PRIVATE' 
+

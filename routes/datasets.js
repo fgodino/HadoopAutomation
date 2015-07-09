@@ -93,15 +93,24 @@ router.post('/', function(req, res){
 
 router.get('/', function(req, res){
 
+    console.log(req.session);
+    
+    var filters = {};
+
+    if(req.query.q) filters.$text = { $search : req.query.q };
+
 	Dataset
-		.find()
-		.or([{owner : username}, {public : true}])
-		.exec(function(err, result){
-			if(err){
-				return res.sendStatus(500);	
-			}
-			return res.send(result);
-		});
+	.find(filters)
+	.or([{owner : username}, {public : true}])
+    .exec(function(err, result){
+        console.log(err);
+		if(err){
+			return res.sendStatus(500);	
+		}
+		return res.render('datasets', {
+            datasets : result
+        });
+	});
 		
 });
 
