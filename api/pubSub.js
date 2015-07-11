@@ -13,7 +13,7 @@ var PubSub = function (connectionPub, connectionSub) {
 
 PubSub.prototype.start = function () {
 
-  connectionSub.subscribe('freeprocess', 'workers');
+  connectionSub.subscribe(process.env.CHANNEL_FREE, process.env.CHANNEL_WORKERS);
   connectionPub.publish('hello', 'Hello');
 
   connectionSub.on('message', function (channel, msg) {
@@ -22,7 +22,7 @@ PubSub.prototype.start = function () {
       workersHelper.addNode(msg, function () {
         console.log('done');
       });
-    } else if (channel === 'freeprocess' ) {
+    } else if (channel === process.env.CHANNEL_FREE ) {
       var key = 'process:' + msg;
       connectionPub.hgetall(key, function (err, obj) {
         async.parallel([
