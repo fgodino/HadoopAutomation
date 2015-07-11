@@ -1,5 +1,8 @@
 var redis = require('redis');
 var redisCli = require('../connections.js').redisDB;
+var popNodes = require('../connections.js').getNodes;
+
+var startTime;
 
 /* Add process to the queue */
 var addProcess = function (process, callback) {
@@ -15,12 +18,12 @@ var addProcess = function (process, callback) {
 }
 
 /* Update the score of the elements of the set*/
-var updateScore = function (time, callback) {
+var updateScore = function (callback) {
 
   var multiQueue = redisCli.multi();
-  var newScore;
   var elem;
-
+  var now = Date.now() / 1000000000;
+  var newScore = starTime - now;
   redisCli.zrange('jobSet', 0, -1, 'withscores', function (err, replies) {
 
     replies = group(replies);
@@ -30,7 +33,7 @@ var updateScore = function (time, callback) {
         nodes: JSON.parse(replies[i][0]).nodes
       }
 
-      multiQueue = multiQueue.zincrby('jobSet', (elem.score / elem.nodes ), replies[i][0]);
+      multiQueue = multiQueue.zincrby('jobSet', (newScore / elem.nodes ), replies[i][0]);
     }
 
     multiQueue.exec(function (err) {
@@ -43,7 +46,14 @@ var updateScore = function (time, callback) {
 var getFirstElement = function (callback) {
 
   redisCli.zrange('jobSet', -1, -1, function (err, res) {
-    callback(res);
+    var nodes = JSON.parse(res).nodes;
+    popNodes(nodes, function (result) {
+      if(result === undefined) {
+        callback();
+      } else {
+        callback(JSON.parse(res).id, result);
+      }
+    });
   });
 }
 
@@ -86,3 +96,4 @@ addProcess(elem1, client, function (res) {
 exports.addProcess = addProcess;
 exports.updateScore = updateScore;
 exports.getFirstElement = getFirstElement;
+exports.startTime = startTime;

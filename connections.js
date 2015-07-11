@@ -22,6 +22,8 @@ var Connections = function() { //Emmiter for async operations
 
     self.redisDB = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
+    self.clientSub = redisDB.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
+
     async.parallel([
       function(cb) {
         self.db.once('open', function() {
@@ -42,12 +44,17 @@ var Connections = function() { //Emmiter for async operations
           console.log(err);
           cb(err);
         });
-      }], function (err) {
-      function (cb) {}
-        mqHelper.startExchange(url, function (connObj) {
-          self.rabbitConnection = connObj;
+      },
+      function (cb) {
+        self.clientSub.once('connect', function () {
           cb();
         });
+
+        self.clientSub.once('error', function () {
+          console.log(err);
+          cb(err);
+        });
+      }
       ], function (err) {
         self.emit('connected');
       });

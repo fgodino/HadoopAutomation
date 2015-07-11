@@ -39,7 +39,7 @@ app.use(function (req, res, next){
 });
 
 var cas_config = {
-	'cas_host' : 'my107.iit.edu', 
+	'cas_host' : 'my107.iit.edu',
 	'service' : 'https://64.131.111.55'
 };
 
@@ -64,15 +64,18 @@ app.set('views', path.join(__dirname, 'views'));
 var index = require('./routes/index.js');
 var datasets = require('./routes/datasets.js');
 var jobs = require('./routes/jobs.js');
+var processes = require('./routes/processes.js');
 
 app.use('/logout', cas_validate.logout(cas_config));
 app.use('/datasets', datasets);
 app.use('/jobs', jobs);
+app.use('/processes', processes);
 app.use('/', index);
 
 // start app ===============================================
 
 var connections = require('./connections');
+var startTime = require('./api/queueHelper.js').startTime;
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),
@@ -84,6 +87,7 @@ connections.on('connected', function(){
 	https.createServer(httpsOptions, app).listen(app.get('port'), function() {
 	    console.log("Using " + app.get('env').toUpperCase() + " connection settings");
 	    console.log("Listening on port " + app.get('port'));
+      startTime = Date.now() / 1000000000;
 	});
 });
 
