@@ -74,7 +74,6 @@ app.use('/', index);
 // start app ===============================================
 
 var connections = require('./connections');
-var startTime = require('./api/queueHelper.js').startTime;
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),
@@ -86,7 +85,6 @@ connections.on('connected', function(){
 	https.createServer(httpsOptions, app).listen(app.get('port'), function() {
 	    console.log("Using " + app.get('env').toUpperCase() + " connection settings");
 	    console.log("Listening on port " + app.get('port'));
-      startTime = Date.now() / 1000000000;
 	});
 });
 

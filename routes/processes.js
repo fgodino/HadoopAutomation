@@ -3,10 +3,13 @@ var express = require('express');
 var router = express.Router();
 var Process = require('../models/Process');
 var async = require('async');
+var queueHelper = require('../api/queueHelper.js')
 
 var username = "fgodino";
 
 router.get('/', function (req, res) {
+
+
 	Process
 		.find({owner : username})
 		.exec(function(err, processes){
@@ -18,7 +21,9 @@ router.get('/', function (req, res) {
 router.post('/', function (req, res) {
 
 	var body = req.body;
-	console.log("UNOOOdsfsdO", req.body)
+
+	var process = new Process ({
+		owner: username,
 
 	var process = new Process ({
 		owner: username,
@@ -27,11 +32,11 @@ router.post('/', function (req, res) {
 		job: body.jobID,
 		nodes: body.nodes
 	});
+
 	console.log('entra');
 	async.waterfall([
 		function (cb) {
 			process.save(function (err, res) {
-				console.log(err)
 				cb(err, res);
 			});
 		},
@@ -42,14 +47,12 @@ router.post('/', function (req, res) {
 			};
 
 			queueHelper.addProcess(elem, function (err) {
-				console.log('inserta en la cola')
 				cb();
 			});
 		},
 		function (cb) {
 			queueHelper.updateScore(function () {
-				console.log('calcula score')
-				cb()
+				cb();
 			});
 		}/*,
 		function (cb) {

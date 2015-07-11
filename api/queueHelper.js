@@ -2,16 +2,25 @@ var redis = require('redis');
 var redisCli = require('../connections.js').redisDB;
 var popNodes = require('../connections.js').getNodes;
 
-var startTime;
+var lastChange = 0;
+var newChange = 0;
 
 /* Add process to the queue */
 var addProcess = function (process, callback) {
 
-  redisCli.zadd('jobSet', 1000 , JSON.stringify(process), function (err) {
+  redisCli.zadd('processSet', 1000 , JSON.stringify(process), function (err) {
     if (err) {
       console.log('Database insertion error: ' + err)
       callback(err);
     } else {
+      if (lastChange != 0) {
+        lastChange = newChange;
+        newChange = Date.now();
+      } else {
+        var aux = Date.now();
+        newChange = aux;
+        lastChange = aux;
+      }
       callback();
     }
   });
@@ -22,9 +31,8 @@ var updateScore = function (callback) {
 
   var multiQueue = redisCli.multi();
   var elem;
-  var now = Date.now() / 1000000000;
-  var newScore = starTime - now;
-  redisCli.zrange('jobSet', 0, -1, 'withscores', function (err, replies) {
+  var newScore = newChange - lastChange;
+  redisCli.zrange('processSet', 0, -1, 'withscores', function (err, replies) {
 
     replies = group(replies);
     for (var i = 0; i < replies.length; i++) {
@@ -33,7 +41,7 @@ var updateScore = function (callback) {
         nodes: JSON.parse(replies[i][0]).nodes
       }
 
-      multiQueue = multiQueue.zincrby('jobSet', (newScore / elem.nodes ), replies[i][0]);
+      multiQueue = multiQueue.zincrby('processSet', (newScore / elem.nodes ), replies[i][0]);
     }
 
     multiQueue.exec(function (err) {
@@ -45,12 +53,20 @@ var updateScore = function (callback) {
 /* Get the element with the highest score in the set */
 var getFirstElement = function (callback) {
 
-  redisCli.zrange('jobSet', -1, -1, function (err, res) {
+  redisCli.zrange('processSet', -1, -1, function (err, res) {
     var nodes = JSON.parse(res).nodes;
     popNodes(nodes, function (result) {
       if(result === undefined) {
         callback();
       } else {
+        if (lastChange != 0) {
+          lastChange = newChange;
+          newChange = Date.now();
+        } else {
+          var aux = Date.now();
+          newChange = aux;
+          lastChange = aux;
+        }
         callback(JSON.parse(res).id, result);
       }
     });
@@ -96,4 +112,3 @@ addProcess(elem1, client, function (res) {
 exports.addProcess = addProcess;
 exports.updateScore = updateScore;
 exports.getFirstElement = getFirstElement;
-exports.startTime = startTime;
