@@ -22,7 +22,7 @@ var Connections = function() { //Emmiter for async operations
 
     self.redisDB = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
-    self.clientSub = redisDB.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
+    self.clientSub = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
     async.parallel([
       function(cb) {

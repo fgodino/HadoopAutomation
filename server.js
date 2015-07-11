@@ -4,6 +4,7 @@ var app           = express();
 var bodyParser    = require('body-parser');
 var cookieParser  = require('cookie-parser');
 var session       = require('express-session')
+var RedisStore    = require('connect-redis')(session);
 var busboy 		  = require('connect-busboy');
 var morgan		  = require('morgan');
 var path		  = require('path');
@@ -45,19 +46,17 @@ var cas_config = {
 
 app.use(cookieParser(secret));
 app.use(session({
+  store: new RedisStore({}),
   secret: secret,
   resave: false,
   saveUninitialized: true
 }));
-app.use(function(req,res,next){
-	console.log(req.url);
-	next();
-});
 app.use(cas_validate.ticket(cas_config));
 app.use(cas_validate.check_and_return(cas_config));
 app.use(morgan('dev'));
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
 app.use(busboy());
-app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
 
@@ -75,7 +74,6 @@ app.use('/', index);
 // start app ===============================================
 
 var connections = require('./connections');
-var startTime = require('./api/queueHelper.js').startTime;
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),
@@ -87,7 +85,6 @@ connections.on('connected', function(){
 	https.createServer(httpsOptions, app).listen(app.get('port'), function() {
 	    console.log("Using " + app.get('env').toUpperCase() + " connection settings");
 	    console.log("Listening on port " + app.get('port'));
-      startTime = Date.now() / 1000000000;
 	});
 });
 
