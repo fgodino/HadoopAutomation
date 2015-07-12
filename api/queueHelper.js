@@ -1,6 +1,7 @@
 var redis = require('redis');
 var redisCli = require('../connections.js').redisDB;
 var popNodes = require('../connections.js').getNodes;
+var workersHelper = require('./workersHelper.js');
 
 var lastChange = 0;
 var newChange = 0;
@@ -45,7 +46,9 @@ var updateScore = function (callback) {
     }
 
     multiQueue.exec(function (err) {
-      callback();
+      getFirstElement(function () {
+        callback();
+      });
     });
   });
 }
@@ -55,8 +58,8 @@ var getFirstElement = function (callback) {
 
   redisCli.zrange('processSet', -1, -1, function (err, res) {
     var nodes = JSON.parse(res).nodes;
-    popNodes(nodes, function (result) {
-      if(result === undefined) {
+    workersHelper.getWorkers(nodes, function (master, slaves) {
+      if(master === undefined) {
         callback();
       } else {
         if (lastChange != 0) {
@@ -67,7 +70,13 @@ var getFirstElement = function (callback) {
           newChange = aux;
           lastChange = aux;
         }
-        callback(JSON.parse(res).id, result);
+
+        var key = 'slaves:' + id;
+        redisCli.lpush(key, slaves, function (err, res) {
+          var msg = master + '::' + key;
+          pubSub.notifyNodes(msg);
+          cb();
+        });
       }
     });
   });
@@ -85,6 +94,8 @@ var group = function (array) {
 
   return newArray;
 }
+
+var getWorkers
 
 // var client = redis.createClient(6379, 'localhost');
 
