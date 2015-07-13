@@ -24,9 +24,14 @@ var Connections = function() { //Emmiter for async operations
 
     self.clientSub = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
+    console.log('Establishing connetions...');
+
     async.parallel([
+
       function(cb) {
+        
         self.db.once('open', function() {
+          console.log('Mongo db connected');
           cb();
         });
 
@@ -37,6 +42,7 @@ var Connections = function() { //Emmiter for async operations
       },
       function (cb) {
         self.redisDB.once('connect', function () {
+          console.log('Redis store db connected');
           cb();
         });
 
@@ -47,6 +53,7 @@ var Connections = function() { //Emmiter for async operations
       },
       function (cb) {
         self.clientSub.once('connect', function () {
+          console.log('Redis pub/sub connected');
           cb();
         });
 
@@ -56,6 +63,11 @@ var Connections = function() { //Emmiter for async operations
         });
       }
       ], function (err) {
+        if(err){
+          console.err('Unable to connect:', err);
+          return;
+        }
+        console.log('All connetions established');
         self.emit('connected');
       });
 };

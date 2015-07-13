@@ -22,7 +22,7 @@ ProcessRunner.prototype.configure = function(options){
 
 	var self = this;
 
-	if(!options.process) = return new Error("process field is mandatory");
+	if(!options.process) return new Error("process field is mandatory");
 
 	this.configured = true;
 	
@@ -63,7 +63,7 @@ ProcessRunner.prototype.configure = function(options){
 
 ProcessRunner.prototype.run = function(){
 
-	if(!this.configure) = return new Error("Call configure first");
+	if(!this.configure) return new Error("Call configure first");
 
 	var promises = [
 		execCommand(this.sbin + "stop-dfs.sh"),
@@ -75,7 +75,7 @@ ProcessRunner.prototype.run = function(){
 	    execCommand(this.bin + "hadoop fs -rmr /output"),
 	    execCommand(this.bin + "hadoop fs -mkdir /input"),
 	    execCommand(this.bin + "hadoop fs -put /tmp/inputfile /input/"),
-	    execCommand(this.bin + "hadoop jar " + this.jobLocation " /input/inputfile /output"),    
+	    execCommand(this.bin + "hadoop jar " + this.jobLocation + " /input/inputfile /output"),    
 	    execCommand(this.bin + "hadoop fs -get /output /tmp/"),            
 	    execCommand(this.sbin + "stop-dfs.sh"),
 		execCommand(this.sbin + "stop-yarn.sh")
@@ -145,6 +145,6 @@ function execCommand(command) {
         })
 
         return defer.promise;
-});
+}
 
 module.exports = ProcessRunner;

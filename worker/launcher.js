@@ -13,7 +13,7 @@ function startListen (store, subscriber) {
 			var info = message.split('::');
 			if(info[0] !== myIP) return;
 
-			store.lrange(, 0, -1, function(err, slaves){
+			store.lrange(info[1], 0, -1, function(err, slaves){
 
 				if(err){
 					return console.err(err);
@@ -34,13 +34,13 @@ function startProcess(info, callback){
 
 	var chain = [
 		worker.configure({
-			process : info.process;
+			process : info.process
 		}),
 		worker.addSlavesToCluster(info.slaves),
-		worker.makeSlaves();
-		worker.makeCurrentNodeMaster();
-		worker.run();
-		worker.releaseSlaves();
+		worker.makeSlaves(),
+		worker.makeCurrentNodeMaster(),
+		worker.run(),
+		worker.releaseSlaves()
 	];
 
 	var result = Q();
@@ -59,5 +59,5 @@ function finishProcess(err, result){
 	console.log(err, result);
 }
 
-connections.redisSub.subscribe(process.env.CHANNEL_WORKERS);
-startListen(connections.redisDB, connections.redisSub);
+connections.clientSub.subscribe(process.env.CHANNEL_WORKERS);
+startListen(connections.redisDB, connections.clientSub);
