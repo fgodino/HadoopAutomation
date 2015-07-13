@@ -1,5 +1,5 @@
 var redis = require('redis');
-var redisCli = /*require('../connections').redisDB;*/ redis.createClient(6379, 'localhost');
+var redisCli = require('../connections').redisDB;
 
 /* Add a worker to the list of available nodes */
 var addNode = function (address, callback) {
@@ -17,19 +17,28 @@ var addNode = function (address, callback) {
 /* Check if there are enough nodes to run the process.
     If the condition is true N nodes are popped from the set.
  */
-var getNodes = function (id, n, callback) {
+var getWorkers = function (n, callback) {
 
-  connections.scard('availNodes', function (err, res) {
-    if (n > res) {
+  redisCli.llen('availMasters', function (err, res) {
+    if (res === 0) {
       cb();
     } else {
-      redisCli.spop('availNodes', n, function (err, res) {
-        var nodesKey = 'nodes:' + id;
-        redisCli.sadd(nodesKey, res, function (err, response) {
-          redisCli.hmset('process:' + id, { 'nodes': nodesKey }, function (err, reply) {
-            cb(reply);
-          });
-        })
+      redisCli.lpop('availMasters', function (err, res) {
+        redisCli.lrange('availSlaves', 0, (n - 2) function (err, members) {
+          if ((members.length + 1 ) >= n) {
+
+            var multiQueue = redisCli.multi();
+            for (var i = 0; i < n; i++) {
+              multiQueue = redisCli.lrem('availSlaves', 1, members[i]);
+            }
+
+            multiQueue.exec(function (err) {
+              callback(master, members);
+            });
+          } else {
+            cb();
+          }
+        });
       });
     }
   });
