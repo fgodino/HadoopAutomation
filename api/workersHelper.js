@@ -24,7 +24,7 @@ var getWorkers = function (n, callback) {
       cb();
     } else {
       redisCli.lpop('availMasters', function (err, res) {
-        redisCli.lrange('availSlaves', 0, (n - 2) function (err, members) {
+        redisCli.lrange('availSlaves', 0, (n - 2), function (err, members) {
           if ((members.length + 1 ) >= n) {
 
             var multiQueue = redisCli.multi();
@@ -45,4 +45,4 @@ var getWorkers = function (n, callback) {
 }
 
 exports.addNode = addNode;
-exports.getNodes = getNodes;
+exports.getWorkers = getWorkers;
