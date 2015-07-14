@@ -59,5 +59,5 @@ function finishProcess(err, result){
 	console.log(err, result);
 }
 
-connections.clientSub.subscribe(process.env.CHANNEL_WORKERS);
+connections.clientSub.subscribe(process.env.CHANNEL_WORKERS, function(){});
 startListen(connections.redisDB, connections.clientSub);
