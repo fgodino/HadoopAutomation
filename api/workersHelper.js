@@ -23,22 +23,26 @@ var getWorkers = function (n, callback) {
     if (res === 0) {
       cb();
     } else {
-      redisCli.lpop('availMasters', function (err, res) {
-        redisCli.lrange('availSlaves', 0, (n - 2), function (err, members) {
-          if ((members.length + 1 ) >= n) {
+      redisCli.lpop('availMasters', function (err, master) {
+        if (n === 1) {
+          callback(master);
+        } else {
+          redisCli.lrange('availSlaves', 0, (n - 2), function (err, members) {
+            if ((members.length + 1 ) >= n) {
 
-            var multiQueue = redisCli.multi();
-            for (var i = 0; i < n; i++) {
-              multiQueue = redisCli.lrem('availSlaves', 1, members[i]);
+              var multiQueue = redisCli.multi();
+              for (var i = 0; i < n; i++) {
+                multiQueue = redisCli.lrem('availSlaves', 1, members[i]);
+              }
+
+              multiQueue.exec(function (err) {
+                callback(master, members);
+              });
+            } else {
+              cb();
             }
-
-            multiQueue.exec(function (err) {
-              callback(master, members);
-            });
-          } else {
-            cb();
-          }
-        });
+          });
+        }
       });
     }
   });

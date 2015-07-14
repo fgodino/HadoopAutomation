@@ -1,6 +1,6 @@
 var redis = require('redis');
 var redisCli = require('../connections.js').redisDB;
-var popNodes = require('../connections.js').getNodes;
+var getWorkers = require('../connections.js').getWorkers;
 var workersHelper = require('./workersHelper.js');
 
 var lastChange = 0;
@@ -58,7 +58,7 @@ var getFirstElement = function (callback) {
 
   redisCli.zrange('processSet', -1, -1, function (err, res) {
     var nodes = JSON.parse(res).nodes;
-    workersHelper.getWorkers(nodes, function (master, slaves) {
+    getWorkers(nodes, function (master, slaves) {
       if(master === undefined) {
         callback();
       } else {
@@ -94,8 +94,6 @@ var group = function (array) {
 
   return newArray;
 }
-
-var getWorkers
 
 // var client = redis.createClient(6379, 'localhost');
 
