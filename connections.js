@@ -24,7 +24,7 @@ var Connections = function() { //Emmiter for async operations
 
     self.clientSub = redis.createClient(process.env.REDIS_PORT, process.env.REDIS_HOST);
 
-    console.log('Establishing connetions...');
+    console.log('Establishing connections...');
 
     async.parallel([
 
@@ -64,7 +64,7 @@ var Connections = function() { //Emmiter for async operations
       }
       ], function (err) {
         if(err){
-          console.err('Unable to connect:', err);
+          console.log('Unable to connect:', err);
           return;
         }
         console.log('All connetions established');
