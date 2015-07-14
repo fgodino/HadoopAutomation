@@ -7,23 +7,9 @@ var queueHelper = require('../api/queueHelper.js')
 
 var username = "fgodino";
 
-router.get('/', function (req, res) {
-
-
-	Process
-		.find({owner : username})
-		.exec(function(err, processes){
-			if(err) return res.send(400);
-			res.send(processes);
-		});
-});
-
 router.post('/', function (req, res) {
 
 	var body = req.body;
-
-	var process = new Process ({
-		owner: username,
 
 	var process = new Process ({
 		owner: username,
@@ -74,5 +60,23 @@ router.post('/', function (req, res) {
 	});
 });
 
+router.get('/', function(req, res){
+
+  console.log(req.session);
+
+
+	Process
+	.find({owner: username})
+    .exec(function(err, result){
+        console.log(err);
+		if(err){
+			return res.sendStatus(500);
+		}
+				return res.render('processes', {
+            processes : result
+        });
+	});
+
+});
 
 module.exports = router;
