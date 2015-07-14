@@ -73,7 +73,7 @@ var getFirstElement = function (callback) {
         }
 
         var key = 'workers:' + id;
-        redisCli.lpush(key, slaves, function (err, res) {
+        redisCli.sadd(key, workers, function (err, res) {
           var msg = master + '::' + key;
           pubSub.notifyNodes(msg);
           cb();

@@ -2,9 +2,9 @@ var redis = require('redis');
 var redisCli = require('../connections').redisDB;
 
 /* Add a worker to the list of available nodes */
-var addNode = function (address, callback) {
+var addWorkers = function (workers, callback) {
 
-  redisCli.sadd('availWorkers', address, function (err, res) {
+  redisCli.sadd('availWorkers', workers, function (err, res) {
     if (err) {
       console.log('Database insertion error');
       callback(err);
