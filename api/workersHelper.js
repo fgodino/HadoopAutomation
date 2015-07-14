@@ -19,14 +19,13 @@ var addNode = function (address, callback) {
  */
 var getWorkers = function (n, callback) {
 
-  redisCli.smembers('availWorkers', function (err, nWorkers) {
-    if (nWorkers < n) {
+  redisCli.smembers('availWorkers', function (err, workers) {
+    if (workers.length < n) {
       cb();
     } else {
-      rediscli.srandmember('availWorkers', n. function (err, members) {
-        redisCli.srem('availWorkers', members, function (err, res) {
-          cb(members);
-        })
+      workers = workers.slice(0, n - 1);
+      redisCli.srem('availWorkers', workers, function (err, res) {
+        cb(workers);
       });
     }
   });
