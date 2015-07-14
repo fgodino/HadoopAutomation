@@ -49,7 +49,7 @@ PubSub.prototype.start = function () {
 
 PubSub.prototype.notifyNodes = function (msg) {
 
-  connectionPub.publish(process.env.CHANNEL_FREE, msg);
+  connectionPub.publish('workers', msg);
 }
 
 module.exports = new PubSub(connectionPub, connectionSub);
