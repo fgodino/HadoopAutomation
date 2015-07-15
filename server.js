@@ -74,6 +74,7 @@ app.use('/', index);
 // start app ===============================================
 
 var connections = require('./connections');
+var pubSub = require('./pubSub.js')
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),
@@ -85,6 +86,7 @@ connections.on('connected', function(){
 	https.createServer(httpsOptions, app).listen(app.get('port'), function() {
 	    console.log("Using " + app.get('env').toUpperCase() + " connection settings");
 	    console.log("Listening on port " + app.get('port'));
+      pubSub.start();
 	});
 });
 

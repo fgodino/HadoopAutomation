@@ -2,9 +2,9 @@ var redis = require('redis');
 var redisCli = require('../connections').redisDB;
 
 /* Add a worker to the list of available nodes */
-var addNode = function (address, callback) {
+var addWorkers = function (workers, callback) {
 
-  redisCli.sadd('availNodes', address, function (err, res) {
+  redisCli.sadd('availWorkers', workers, function (err, res) {
     if (err) {
       console.log('Database insertion error');
       callback(err);
@@ -19,30 +19,13 @@ var addNode = function (address, callback) {
  */
 var getWorkers = function (n, callback) {
 
-  redisCli.llen('availMasters', function (err, res) {
-    if (res === 0) {
+  redisCli.smembers('availWorkers', function (err, workers) {
+    if (workers.length < n) {
       cb();
     } else {
-      redisCli.lpop('availMasters', function (err, master) {
-        if (n === 1) {
-          callback(master);
-        } else {
-          redisCli.lrange('availSlaves', 0, (n - 2), function (err, members) {
-            if ((members.length + 1 ) >= n) {
-
-              var multiQueue = redisCli.multi();
-              for (var i = 0; i < n; i++) {
-                multiQueue = redisCli.lrem('availSlaves', 1, members[i]);
-              }
-
-              multiQueue.exec(function (err) {
-                callback(master, members);
-              });
-            } else {
-              cb();
-            }
-          });
-        }
+      workers = workers.slice(0, n - 1);
+      redisCli.srem('availWorkers', workers, function (err, res) {
+        cb(workers);
       });
     }
   });

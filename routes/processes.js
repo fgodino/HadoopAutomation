@@ -19,7 +19,6 @@ router.post('/', function (req, res) {
 		nodes: body.nodes
 	});
 
-	console.log('entra');
 	async.waterfall([
 		function (cb) {
 			process.save(function (err, res) {

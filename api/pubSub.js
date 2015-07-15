@@ -1,4 +1,5 @@
 var redis = require('redis');
+var queueHelper = require('./queueHelper.js');
 var workersHelper = require('./workersHelper.js');
 var connectionSub = require('../connections.js').clientSub;
 var connectionPub = require('../connections.js').redisDB;
@@ -14,34 +15,29 @@ var PubSub = function (connectionPub, connectionSub) {
 PubSub.prototype.start = function () {
 
   connectionSub.subscribe(process.env.CHANNEL_FREE, process.env.CHANNEL_WORKERS);
-  connectionPub.publish('hello', 'Hello');
 
   connectionSub.on('message', function (channel, msg) {
-    if (channel === 'workers') {
-      console.log(msg)
-      workersHelper.addNode(msg, function () {
-        console.log('done');
-      });
-    } else if (channel === process.env.CHANNEL_FREE ) {
-      var key = 'process:' + msg;
-      connectionPub.hgetall(key, function (err, obj) {
+    if (channel === process.env.CHANNEL_FREE ) {
+
+      var splitted = msg.splice(':');
+      connectionPub.smembers(msg, function (err, workers) {
         async.parallel([
           function (cb) {
-            var query = { _id: msg };
+            var query = { _id: splitted[1] };
             Process.update(query, { states: 'PROCESSED' }, function () {
               callback();
             });
           },
           function (cb) {
-            connectionPub.del(key, function (err, res) {
-              cb();
-            })
-          },
-          function (cb) {
-              // TO-DO add free nodes to the available nodes list
-
+            connectionPub.del(msg, function (err, res) {
+              workersHelper.addWorkers(workers, function () {
+                cb();
+              });
+            });
           }
-        ]);
+        ], function (err, res) {
+          queueHelper.updateScores(function () {});
+        });
       });
     }
   });
@@ -49,7 +45,7 @@ PubSub.prototype.start = function () {
 
 PubSub.prototype.notifyNodes = function (msg) {
 
-  connectionPub.publish(process.env.CHANNEL_FREE, msg);
+  connectionPub.publish(process.env.CHANNEL_WORKERS, msg);
 }
 
 module.exports = new PubSub(connectionPub, connectionSub);

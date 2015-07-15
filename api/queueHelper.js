@@ -58,8 +58,9 @@ var getFirstElement = function (callback) {
 
   redisCli.zrange('processSet', -1, -1, function (err, res) {
     var nodes = JSON.parse(res).nodes;
-    getWorkers(nodes, function (master, slaves) {
-      if(master === undefined) {
+    console.log('nodes: ' + nodes)
+    getWorkers(nodes, function (workers) {
+      if(workers === undefined) {
         callback();
       } else {
         if (lastChange != 0) {
@@ -71,9 +72,9 @@ var getFirstElement = function (callback) {
           lastChange = aux;
         }
 
-        var key = 'slaves:' + id;
-        redisCli.lpush(key, slaves, function (err, res) {
-          var msg = master + '::' + key;
+        var key = 'workers:' + id;
+        redisCli.sadd(key, workers, function (err, res) {
+          var msg = workers[0] + '::' + key;
           pubSub.notifyNodes(msg);
           cb();
         });
