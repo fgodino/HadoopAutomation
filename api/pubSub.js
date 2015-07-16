@@ -25,7 +25,7 @@ PubSub.prototype.start = function () {
           function (cb) {
             var query = { _id: splitted[1] };
             Process.update(query, { states: 'PROCESSED' }, function () {
-              callback();
+              cb();
             });
           },
           function (cb) {
@@ -45,6 +45,8 @@ PubSub.prototype.start = function () {
 
 PubSub.prototype.notifyNodes = function (msg) {
 
+  console.log('MESSAGE SENT');
+  console.log('CHANNEL: ' + process.env.CHANNEL_WORKERS);
   connectionPub.publish(process.env.CHANNEL_WORKERS, msg);
 }
 

@@ -29,7 +29,7 @@ var Connections = function() { //Emmiter for async operations
     async.parallel([
 
       function(cb) {
-        
+
         self.db.once('open', function() {
           console.log('Mongo db connected');
           cb();
@@ -37,7 +37,6 @@ var Connections = function() { //Emmiter for async operations
 
         self.db.once('error', function(err) {
           console.log(err);
-          cb(err);
         });
       },
       function (cb) {
@@ -48,7 +47,6 @@ var Connections = function() { //Emmiter for async operations
 
         self.redisDB.once('error', function () {
           console.log(err);
-          cb(err);
         });
       },
       function (cb) {
@@ -57,9 +55,8 @@ var Connections = function() { //Emmiter for async operations
           cb();
         });
 
-        self.clientSub.once('error', function () {
+        self.clientSub.once('error', function (err) {
           console.log(err);
-          cb(err);
         });
       }
       ], function (err) {
