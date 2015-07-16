@@ -14,12 +14,12 @@ router.post('/', function(req, res){
 	var data = {}, buffer;
 
     req.busboy.once('file', function(fieldname, file, filename) {
-        
+
         var bufs = [];
         data.filename = filename;
-        
-        file.on('data', function(d) { 
-        	bufs.push(d); 
+
+        file.on('data', function(d) {
+        	bufs.push(d);
         });
         file.on('end', function() {
             buffer = Buffer.concat(bufs);
@@ -31,7 +31,7 @@ router.post('/', function(req, res){
     });
 
     req.busboy.on('finish', function() {
-    	
+
     	if(!data.name || !buffer){
     		return res.send(400, 'Missing filename or file');
     	}
@@ -63,7 +63,7 @@ router.post('/', function(req, res){
     					filename : data.filename
     				}
     			}, function(err, data) {
-					
+
 					if(err){
 						//Rollback
 						job.remove(function(){
@@ -77,7 +77,7 @@ router.post('/', function(req, res){
     		}
 
     	], function(err, job){
-    		
+
     		if(err){
     			return res.sendStatus(400);
     		}
@@ -99,17 +99,19 @@ router.get('/', function(req, res){
 		.or([{owner : username}, {public : true}])
 		.exec(function(err, result){
 			if(err){
-				return res.sendStatus(500);	
+				return res.sendStatus(500);
 			}
-			return res.send(result);
+			return res.render('jobs', {
+                jobs: result
+            });
 		});
-		
+
 });
 
 router.get('/:id', function(req, res){
 
     Job.findById(req.params.id, function(err, job){
-        
+
         if(err){
             return res.sendStatus(500);
         }
@@ -120,7 +122,7 @@ router.get('/:id', function(req, res){
             Key : job.s3Key
         };
 
-		s3.headObject(params, function(err, info) {	
+		s3.headObject(params, function(err, info) {
 			if(err) return res.send(500);
 	        var stream = s3.getObject(params).createReadStream();
 			res.set({
@@ -132,7 +134,7 @@ router.get('/:id', function(req, res){
 		});
 
     });
-     
+
 });
 
 

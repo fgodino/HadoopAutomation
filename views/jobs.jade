@@ -1,0 +1,17 @@
+extends ./layout.jade
+
+block body
+  div.container-fluid
+    table.table.table-striped.table-bordered.table-hover
+      thead
+        tr
+          td Name
+          td Owner
+          td Visibility
+      tbody
+        each job in jobs
+          tr
+            td= job.name
+            td= job.owner
+            td= job.public ? 'PUBLIC' : 'PRIVATE'
+
