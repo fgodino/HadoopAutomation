@@ -57,15 +57,13 @@ function startProcess(info, callback){
 		result = result.then(promise);
 	});
 
-	Q.try(function(){
-		result.then(function success(res){
-			callback(null, res);
-		}, function fail(err){
-			callback(err);
-		});
-	}).catch(function(err){
-		console.log("ERROR--", err);
-	});
+	result.then(function success(res){
+		console.log(res);
+		callback(null, res);
+	}, function fail(err){
+		callback(err);
+	})
+	.done();
 }
 
 connections.clientSub.subscribe(process.env.CHANNEL_WORKERS, function(){});

@@ -1,7 +1,7 @@
 
 var Q = require('q'),
 	fs = require('fs'),
-    exec = require('child_process').exec,
+    execFile = require('child_process').execFile,
     connections = require('../connections'),
     getLocalAddress = require('../util/getLocalAddress'),
     Process = require('../models/Process');
@@ -26,12 +26,10 @@ ProcessRunner.prototype.configure = function(options){
 
 	this.configured = true;
 	
-	return Process.findById(options.process).populate('dataset job').exec()
+	return Q(Process.findById(options.process).populate('dataset job').exec())
 		.then(function(proc){
 
 			proc = proc.toJSON();
-
-			console.log(proc);
 
 			if(!proc.dataset || !proc.job) return new Error(); 
 
@@ -46,19 +44,17 @@ ProcessRunner.prototype.configure = function(options){
 				})
 			]).spread(function(datasetObj, jobObj){
 
-				console.log("#############2", self);
-
 				return Q.all([
 					Q.nfcall(fs.mkdir, '/datasets'),
 					Q.nfcall(fs.mkdir, '/jobs')
 				])
-				.then(function(){
+				.fin(function(){
 
 					console.log("LLEGA");
 
 					return Q.all([
 						Q.nfcall(fs.writeFile, '/datasets/dataset', datasetObj.Body),
-						Q.nfcall(fs.writeFile, '/jobs', jobObj.Body)
+						Q.nfcall(fs.writeFile, '/jobs/job', jobObj.Body)
 					]);
 				});
 
@@ -71,46 +67,10 @@ ProcessRunner.prototype.run = function(){
 
 	if(!this.configure) return new Error("Call configure first");
 
-	var promises = [
-		execCommand(this.sbin + "stop-dfs.sh"),
-		execCommand(this.sbin + "stop-yarn.sh"),
-	    execCommand(this.bin + "hadoop namenode -format -force"),
-	    execCommand(this.sbin + "start-dfs.sh"),
-	   	execCommand(this.sbin + "start-yarn.sh"),
-	    execCommand(this.bin + "hadoop fs -rm /input/dataset"),
-	    execCommand(this.bin + "hadoop fs -rmr /output"),
-	    execCommand(this.bin + "hadoop fs -mkdir /input"),
-	    execCommand(this.bin + "hadoop fs -put /datasets/dataset /input/"),
-	    execCommand(this.bin + "hadoop jar /jobs/job WordCount /input/dataset /output"),    
-	    execCommand(this.bin + "hadoop fs -get /output /tmp/"),            
-	    execCommand(this.sbin + "stop-dfs.sh"),
-		execCommand(this.sbin + "stop-yarn.sh")
-	];
-
-	var result = Q();
-
-	promises.forEach(function(promise){
-		result = result.then(promise);
+	return Q.nfcall(execFile, './launch_work.sh').then(function (text) {
+		console.log(text);
 	});
 
-	return result;
-};
-
-ProcessRunner.prototype.runSlave = function(){
-
-	if(!this.configure) return new Error("Call configure first");
-
-	var promises = [
-	    execCommand(this.sbin + "start-dfs.sh"),
-		execCommand(this.sbin + "start-yarn.sh")
-	];
-
-	var result = Q();
-	promises.forEach(function(promise){
-		result = promise.then();
-	});
-
-	return result;
 };
 
 ProcessRunner.prototype.makeSlaves = function(){
@@ -118,19 +78,21 @@ ProcessRunner.prototype.makeSlaves = function(){
 	var self = this;
 	var slaves = self.slaves || [];
 
-		
-	var masterAddress = getLocalAddress();
-    var chained = Q();
+	
+	var masterAddress = getLocalAddress()['eth0'];
+    
+    var syncMasters = []
+    var copyHosts = [];
 
     slaves.forEach(function(slave){
-		chained = execCommand(self.home + "/BackendWorker/syncmaster " + slaves + " " + masterAddress).then();
+		syncMasters.push(execCommand("./syncmaster.sh " + slave + " " + masterAddress));
+		copyHosts.push(execCommand("ssh /etc/hosts root@" + slave + ":/etc/hosts"));
 	});
 
-    slaves.forEach(function(slave){
-		chained = execCommand("ssh /etc/hosts root@" + slave + ":/etc/hosts").then();
-	});
-
-	return chained;
+	return Q.all(syncMasters)
+			.then(function(){
+				return Q.all(copyHosts);
+			});
 
 };
 
@@ -144,7 +106,7 @@ ProcessRunner.prototype.releaseSlaves = function(){
 
 ProcessRunner.prototype.makeCurrentNodeMaster = function(){
 	var file = this.home + "/hadoop-2.6.0/etc/hadoop/masters"
-	return Q.nfcall(fs.writeFile, file, "master");
+	return Q.nfcall(fs.writeFile, file, "master\n");
 };
 
 ProcessRunner.prototype.makeCurrentNodeSlave = function(master){
@@ -161,17 +123,20 @@ ProcessRunner.prototype.addSlavesToCluster = function (slaves){
 };
 
 function execCommand(command) {
-    var defer = Q.defer();
 
-    exec(command, null, function(error, stdout, stderr) {
-    	console.log("ERROR:", error);
-    	console.log(stderr, stdout);
-        return error 
-            ? defer.reject(stderr + new Error(error.stack || error))
-            : defer.resolve(stdout);
-    });
+	var deferred = Q.defer();
 
-    return defer.promise;
+	var cmd = exec(command, function(err){
+		
+		if(err){
+			console.log(err);
+		}
+
+		deferred.resolve();
+	});
+
+	return deferred.promise();
+
 }
 
 module.exports = ProcessRunner;
