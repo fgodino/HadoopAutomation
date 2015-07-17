@@ -14,11 +14,11 @@ router.post('/', function(req, res){
 	var data = {}, buffer;
 
     req.busboy.once('file', function(fieldname, file) {
-        
+
         var bufs = [];
-        
-        file.on('data', function(d) { 
-        	bufs.push(d); 
+
+        file.on('data', function(d) {
+        	bufs.push(d);
         });
         file.on('end', function() {
             buffer = Buffer.concat(bufs);
@@ -30,7 +30,7 @@ router.post('/', function(req, res){
     });
 
     req.busboy.on('finish', function() {
-    	
+
     	if(!data.name || !buffer){
     		return res.send(400, 'Missing filename or file');
     	}
@@ -60,7 +60,7 @@ router.post('/', function(req, res){
     				Body : buffer
 
     			}, function(err, data) {
-					
+
 					if(err){
 						//Rollback
 						dataset.remove(function(){
@@ -76,12 +76,12 @@ router.post('/', function(req, res){
     		}
 
     	], function(err, dataset){
-    		
+
     		if(err){
     			return res.sendStatus(400);
     		}
 
-    		res.send(dataset.toJSON());
+    		res.redirect('/datasets');
 
     	});
 
@@ -94,7 +94,7 @@ router.post('/', function(req, res){
 router.get('/', function(req, res){
 
     console.log(req.session);
-    
+
     var filters = {};
 
     if(req.query.q) filters.$text = { $search : req.query.q };
@@ -105,41 +105,55 @@ router.get('/', function(req, res){
     .exec(function(err, result){
         console.log(err);
 		if(err){
-			return res.sendStatus(500);	
+			return res.sendStatus(500);
 		}
 		return res.render('datasets', {
             datasets : result
         });
 	});
-		
+
 });
 
 router.get('/:id', function(req, res){
 
     Dataset.findById(req.params.id, function(err, dataset){
-        
+
         if(err){
             return res.sendStatus(500);
         }
 
         dataset = dataset.toJSON();
-
-        s3.getObject({
+        var params = {
             Bucket : dataset.s3Bucket,
             Key : dataset.s3Key
-        }, function(err, data) {
-            if(err) return res.sendStatus(500);
+        };
 
-            try {
-                dataset.body = data.Body.toString();
-                res.send(dataset);
-            } catch(err){
-                console.log(err);
-                res.sendStatus(500);
-            }
+        s3.headObject(params, function(err, info) {
+            if(err) return res.send(500);
+            var stream = s3.getObject(params).createReadStream();
+            res.set({
+                'Content-Type': 'application/octet-stream',
+                'Content-Disposition' : 'attachment; filename="' + info.Metadata.filename + '"',
+                'Content-Length' : info.ContentLength
+            });
+            stream.pipe(res);
         });
+
     });
-        
+
+});
+
+router.delete('/:id', function (req, res) {
+
+    Dataset.findById(req.params.id, function (err, dataset) {
+        if(dataset.owner !== username) {
+            res.sendStatus(401);
+        } else {
+            Dataset.findByIdAndRemove(req.params.id, function (err) {
+                res.sendStatus(200);
+            })
+        }
+    });
 });
 
 

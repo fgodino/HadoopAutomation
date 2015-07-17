@@ -4,12 +4,7 @@ var express = require('express');
 var router = express.Router();
 
 router.get('/', function (req, res) {
-	res.render('index.ejs', {
-		user : req.user,
-		message : "",
-		datasets : [],
-		jobs : []
-	});
+	res.redirect('/processes');
 });
 
 module.exports = router;

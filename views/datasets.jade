@@ -1,17 +1,49 @@
 extends ./layout.jade
 
 block body
-	div.container-fluid
-		table.table.table-striped.table-bordered.table-hover
-			thead
-				tr
-					td Name
-					td Owner
-					td Visibility
-			tbody
-				each dataset in datasets
-					tr
-						td= dataset.name
-						td= dataset.owner
-						td=dataset.public ? 'PUBLIC' : 'PRIVATE' 
+  div#showDatasets.container-fluid
+    div.row
+      div#uploadDataset.col-md-4
+        button.btn.btn-primary.btn-block.btn-lg(onclick="addDataset()") Add new dataset
+      div#search.col-md-6.col-md-offset-2
+        input.form-control.input-lg(type="text" placeholder="Search...")
+    div.separator
+    div.row
+      div.col-md-12
+        table.table.table-striped.table-bordered.table-hover
+          thead
+            tr
+              td Name
+              td Owner
+              td Visibility
+              td Download
+              td Delete
+          tbody
+            each dataset in datasets
+              tr
+                td= dataset.name
+                td= dataset.owner
+                td= dataset.public ? 'PUBLIC' : 'PRIVATE'
+                td
+                  button.btn.btn-block.btn-sm(value=dataset._id onclick="downloadDataset(this)") Download dataset
+                td
+                  button.btn.btn-danger.btn-block.btn-sm(value=dataset._id onclick="deleteDataset(this)") Delete dataset
 
+  div#newDataset.container-fluid.panel.container-borders(style="display:none")
+    form.form-horizontal(method="post" action="/datasets" enctype="multipart/form-data")
+      div.form-group
+        label.col-md-4.col-md-offset-2 Name
+        div.col-md-4
+          input.form-control.input(type="text" placeholder="Name..." name="name")
+      div.form-group
+        label.col-md-4.col-md-offset-2 Privacy
+        div.col-md-4
+          select#public.form-control(name="public")
+            option(value="true") Public
+            option(value="false") Private
+      div.form-group
+        label.col-md-4.col-md-offset-2 Select file to upload
+        input.form-control-input.col-md-4(type="file" name="file")
+      div.form-group
+        div.col-md-4.col-md-offset-2
+          button.btn.btn-primary.btn-block(type="submit") Upload dataset

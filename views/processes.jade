@@ -24,8 +24,8 @@ block body
                 td= process.nodes
                 td= process.states
 
-  form(method="post" action="/processes")
-    div#newProcess.container-fluid(style="display:none")
+  div#newProcess.container-fluid(style="display:none")
+    form(method="post" action="/processes")
       div.row
         div.col-md-4.col-md-offset-2
           table.table.table-striped.table-bordered.table-hover

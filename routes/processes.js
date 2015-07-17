@@ -57,7 +57,7 @@ router.post('/', function (req, res) {
 	], function (err, id, nodes) {
 		// TO-DO hadoop logic
 
-		res.send(200);
+		res.redirect('/processes');
 	});
 });
 

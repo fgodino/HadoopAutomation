@@ -82,7 +82,7 @@ router.post('/', function(req, res){
     			return res.sendStatus(400);
     		}
 
-    		res.send(job.toJSON());
+    		res.redirect('/jobs');
 
     	});
 
@@ -135,6 +135,19 @@ router.get('/:id', function(req, res){
 
     });
 
+});
+
+router.delete('/:id', function (req, res) {
+
+    Job.findById(req.params.id, function (err, job) {
+        if(job.owner !== username) {
+            res.sendStatus(401);
+        } else {
+            Job.findByIdAndRemove(req.params.id, function (err) {
+                res.sendStatus(200);
+            })
+        }
+    });
 });
 
 
