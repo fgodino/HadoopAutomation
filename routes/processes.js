@@ -2,6 +2,8 @@
 var express = require('express');
 var router = express.Router();
 var Process = require('../models/Process');
+var Job = require('../models/Job');
+var Dataset = require('../models/Dataset');
 var async = require('async');
 var queueHelper = require('../api/queueHelper.js')
 
@@ -61,20 +63,56 @@ router.post('/', function (req, res) {
 
 router.get('/', function(req, res){
 
-  console.log(req.session);
-
-
-	Process
-	.find({owner: username})
-    .exec(function(err, result){
-        console.log(err);
-		if(err){
-			return res.sendStatus(500);
+	async.parallel([
+		function (cb) {
+			Job
+			.find()
+				.or([{owner : username}, {public : true}])
+					.exec(function(err, result){
+					if(err){
+						cb(err);
+					} else {
+						cb(null, result);
+					}
+			});
+		},
+		function (cb) {
+			Dataset
+			.find()
+				.or([{owner : username}, {public : true}])
+					.exec(function(err, result){
+					if(err){
+						cb(err);
+					} else {
+						cb(null, result);
+					}
+			});
+		},
+		function (cb) {
+			Process
+			.find({owner: username})
+    		.exec(function(err, result){
+        	console.log(err);
+				if(err){
+					cb(err);
+				} else {
+					cb(null, result);
+				}
+			});
 		}
-				return res.render('processes', {
-            processes : result
-        });
+	], function (err, results) {
+		if (err) {
+			res.sendStatus(500)
+		} else {
+			res.render('processes', {
+				jobs: results[0],
+				datasets: results[1],
+				processes: results[2]
+			});
+		}
 	});
+
+
 
 });
 

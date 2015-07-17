@@ -21,15 +21,16 @@ var getWorkers = function (n, callback) {
 
   redisCli.smembers('availWorkers', function (err, workers) {
     if (workers.length < n) {
-      cb();
+      callback();
     } else {
-      workers = workers.slice(0, n - 1);
+      workers = workers.slice(0, n);
       redisCli.srem('availWorkers', workers, function (err, res) {
-        cb(workers);
+        console.log('workers: ' + workers)
+        callback(workers);
       });
     }
   });
 }
 
-exports.addNode = addNode;
+exports.addWorkers = addWorkers;
 exports.getWorkers = getWorkers;
