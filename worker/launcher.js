@@ -95,7 +95,9 @@ connections.on('connected', function(){
 	autoDiscovery(connections.redisDB, connections.clientSub);
 	startListen(connections.redisDB, connections.clientSub);
 
-	setTimeout(function(){ //Wait to have a stable cluster
-		connections.redisDB.publish(process.env.CHANNEL_HELLO, myIP);
-	}, 10000);
+	connections.redisDB.sadd(process.env.SET_AVAILABLE_WORKERS, myIP, function(){
+		setTimeout(function(){ //Wait to have a stable cluster
+			connections.redisDB.publish(process.env.CHANNEL_HELLO, myIP);
+		}, 10000);
+	});
 });
