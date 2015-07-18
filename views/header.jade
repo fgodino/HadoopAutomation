@@ -3,12 +3,14 @@ nav#header.navbar.navbar-fixed-top(role='navigation')
     .navbar-header
         a.navbar-brand(href='/' tabindex='-1')
           img(height='30px' src='https://web.iit.edu/sites/web/files/departments/marketing-communications/logos/images/IIT_Logo_stack_186_blk.gif')
-    p.navbar-text
-      a.navbar-link(href='/processes') Processes
-    p.navbar-text
-      a.navbar-link(href='/datasets') Datasets
-    p.navbar-text
-      a.navbar-link(href='/jobs') Jobs
-    p.navbar-text.pull-right
-      a.navbar-link(href='/signout') Sign out
+    ul.nav.navbar-nav
+      li
+        a.navbar-btn(href='/processes') Processes
+      li
+        a.navbar-btn(href='/datasets') Datasets
+      li
+        a.navbar-btn(href='/jobs') Jobs
+    ul.nav.navbar-nav.navbar-right
+      li
+        a.navbar-btn(href='/signout') Sign out
 div.separator
