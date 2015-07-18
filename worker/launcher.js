@@ -1,8 +1,9 @@
 
-var Q 	   = require('q');
 var Worker = require('./worker');
 var connections = require('../connections');
 var myIP =  require('../util/getLocalAddress')().eth0;
+var async = require('async');
+var fs = require('fs');
 
 function startListen (store, subscriber) {
 
@@ -41,30 +42,60 @@ function startProcess(info, callback){
 	var worker = new Worker();
 
 	var chain = [
-		worker.configure({
-			process : info.process
-		}),
-		worker.addSlavesToCluster(info.slaves),
-		worker.makeSlaves(),
-		worker.makeCurrentNodeMaster(),
-		worker.run(),
-		worker.releaseSlaves()
+		worker.configure.bind(worker, { process : info.process }),
+		worker.addSlavesToCluster.bind(worker, info.slaves),
+		worker.makeSlaves,
+		worker.makeCurrentNodeMaster,
+		worker.run,
+		worker.releaseSlaves,
+		worker.uploadResults
 	];
 
-	var result = Q();
-
-	chain.forEach(function(promise){
-		result = result.then(promise);
+	async.series(chain.map(function(f){
+		return function(cb){
+			f.call(worker, cb);
+		}
+	}), function(err){
+		store.publish(process.env.CHANNEL_FREE, [info.process, (err) ? 'FAILED' : 'SUCESS'].join(':'));
 	});
-
-	result.then(function success(res){
-		console.log(res);
-		callback(null, res);
-	}, function fail(err){
-		callback(err);
-	})
-	.done();
 }
 
-connections.clientSub.subscribe(process.env.CHANNEL_WORKERS, function(){});
-startListen(connections.redisDB, connections.clientSub);
+function autoDiscovery(store, subscriber){
+
+	var myDsa = fs.readFileSync(process.env.HOME + '/.ssh/id_dsa.pub', {encoding : 'utf8'});
+
+	subscriber.on('message', function(channel, message){
+		if(channel === process.env.CHANNEL_DISCOVERY){
+
+			console.log(message);
+
+			message = message.split(':');
+			var type = message[0], ip = message[1], dsa = message[2];
+
+			if(type === 'pong' && ip !== myIP) return;
+
+			execFile(__dirname + "/copy_key.sh", [dsa], function(err){
+				if(err){
+					return console.log(err);
+				}
+				if(type === 'ping'){
+					var myDsaMsg = ['pong', ip, myDsa].join(':');
+					store.publish(process.env.CHANNEL_DISCOVERY, myDsaMsg);
+				}
+			});
+		}
+	});
+
+	store.publish(process.env.CHANNEL_DISCOVERY, ['ping', myIP, myDsa].join(':'));
+}
+
+connections.clientSub.subscribe(process.env.CHANNEL_WORKERS);
+connections.clientSub.subscribe(process.env.CHANNEL_DISCOVERY);
+connections.on('connected', function(){
+	autoDiscovery(connections.redisDB, connections.clientSub);
+	startListen(connections.redisDB, connections.clientSub);
+
+	setTimeout(function(){ //Wait to have a stable cluster
+		connections.redisDB.publish(process.env.CHANNEL_HELLO, myIP);
+	}, 10000);
+});

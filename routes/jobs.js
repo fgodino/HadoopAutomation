@@ -7,8 +7,6 @@ var sanitize = require("sanitize-filename");
 
 var s3 = require('../connections').s3;
 
-var username = "fgodino";
-
 router.post('/', function(req, res){
 
 	var data = {}, buffer;

@@ -20,7 +20,9 @@ var processSchema = mongoose.Schema({
     states : { type : String, enum : states, default : states[0] },
     dataset: { type: mongoose.Schema.Types.ObjectId, ref: 'Dataset' },
     job: { type: mongoose.Schema.Types.ObjectId, ref: 'Job' },
-    nodes : { type : Number, default : 1 }
+    nodes : { type : Number, default : 1 },
+    s3Bucket : String,
+    s3Key : String
 });
 
 processSchema.pre('save', function (next) {
