@@ -62,7 +62,7 @@ function startProcess(info, callback){
 
 function autoDiscovery(store, subscriber){
 
-	var myDsa = fs.readFileSync(process.env.HOME + '/.ssh/id_dsa.pub', {encoding : 'utf8'});
+	var myDsa = fs.readFileSync('/root/.ssh/id_dsa.pub', {encoding : 'utf8'});
 
 	subscriber.on('message', function(channel, message){
 		if(channel === process.env.CHANNEL_DISCOVERY){

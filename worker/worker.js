@@ -15,7 +15,7 @@ function _secureCb(cb){return cb || function(){}};
 
 var ProcessRunner = function () {
 
-	this.home = process.env.HOME;
+	this.home = '/root/';
 	this.bin = this.home + "/hadoop-2.6.0/bin/";
 	this.sbin = this.home + "/hadoop-2.6.0/sbin/";
 
