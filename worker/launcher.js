@@ -56,7 +56,7 @@ function startProcess(info, callback){
 			f.call(worker, cb);
 		}
 	}), function(err){
-		store.publish(process.env.CHANNEL_FREE, [info.process, (err) ? 'FAILED' : 'SUCESS'].join(':'));
+		connections.redisDB.publish(process.env.CHANNEL_FREE, [info.process, (err) ? 'FAILED' : 'SUCESS'].join(':'));
 	});
 }
 
@@ -67,12 +67,13 @@ function autoDiscovery(store, subscriber){
 	subscriber.on('message', function(channel, message){
 		if(channel === process.env.CHANNEL_DISCOVERY){
 
-			console.log(message);
 
 			message = message.split(':');
 			var type = message[0], ip = message[1], dsa = message[2];
 
 			if(type === 'pong' && ip !== myIP) return;
+			
+			console.log(dsa);
 
 			execFile(__dirname + "/copy_key.sh", [dsa], function(err){
 				if(err){

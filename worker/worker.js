@@ -70,9 +70,9 @@ ProcessRunner.prototype.configure = function(options, callback){
 			], function(err, results){
 
 						var datasetObj  = results[0];
-						var jobObj 			= results[1];
+						var jobObj 	= results[1];
 
-						self.classname = jobObj.classname;
+						self.classname = proc.job.classname;
 
 						if(err){
 							return callback(err);
@@ -93,6 +93,7 @@ ProcessRunner.prototype.configure = function(options, callback){
 
 ProcessRunner.prototype.run = function(callback){
 	if(!this.configure) callback(true);
+	console.log(this.classname);
 	var out = execFile(__dirname + '/launch_work.sh', [this.classname], {env : process.env}, callback);
 	logOutput(out);
 };
@@ -135,32 +136,51 @@ ProcessRunner.prototype.addSlavesToCluster = function (slaves, callback){
 	return fs.writeFile(file, slavesString, callback);
 };
 
-ProcessRunner.prototype.saveResult = function(callback){
+ProcessRunner.prototype.uploadResults = function(callback){
+
+	var self = this;
     
-	this.archive.on('error', function(err) {
+	self.archive.on('error', function(err) {
     callback(err);
   }); 
 
-  this.archive.directory('/result/output');
+  self.archive.directory('/result/output');
 
-  connections.s3.putObj({
-		Bucket : proc.dataset.s3Bucket,
-  	Key : this.proc._id,
-  	Body : this.archive
-	}, function(err){
-		
-		if(err){
-			return callback(err);
-		}
+  console.log(self.proc);
 
-		this.proc.s3Bucket = process.env.S3_PROCESSES_BUCKET;
-		this.proc.s3Key = this.proc._id;
+  var buffers = [];
 
-		this.proc.save(callback);
+  self.archive.on('data', function(buffer){
+  	buffers.push(buffer);
+  });
 
-	});
+  self.archive.on('end', function(){
 
-	this.archive.finalize();
+  	var body = Buffer.concat(buffers);
+
+  	console.log(body.length);
+
+	  connections.s3.putObject({
+			Bucket : process.env.S3_PROCESSES_BUCKET,
+	  	Key : self.proc._id.toString(),
+	  	Body : body
+		}, function(err){
+			
+			if(err){
+				console.log(err);
+				return callback(err);
+			}
+
+			self.proc.s3Bucket = process.env.S3_PROCESSES_BUCKET;
+			self.proc.s3Key = self.proc._id;
+
+			self.proc.save(callback);
+
+		});
+  });
+
+
+	self.archive.finalize();
 
 };
 
@@ -168,11 +188,11 @@ ProcessRunner.prototype.saveResult = function(callback){
 function logOutput(child){
 
 	child.stderr.on('data', function(data){
-		console.log(data);
+		process.stderr.write(data);
 	})
 
 	child.stdout.on('data', function(data){
-		console.log(data);
+		process.stdout.write(data);
 	})
 
 	child.on('error', function(err){
