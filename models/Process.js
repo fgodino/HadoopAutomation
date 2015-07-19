@@ -10,7 +10,7 @@ var Dataset = require('./Dataset.js'),
 var states = [
     'WAITING',
     'PROCESSING',
-    'PROCESSED',
+    'SUCCESS',
     'FAILED'
 ];
 

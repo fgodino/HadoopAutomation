@@ -3,8 +3,9 @@ var queueHelper = require('./queueHelper.js');
 var workersHelper = require('./workersHelper.js');
 var connectionSub = require('../connections.js').clientSub;
 var connectionPub = require('../connections.js').redisDB;
+var async = require('async');
 var Process = require('../models/Process');
-var SocketEmitter = require('./socketEmitter.js');
+//var SocketEmitter = require('./socketEmitter.js');
 
 var PubSub = function (connectionPub, connectionSub) {
 
@@ -18,21 +19,18 @@ PubSub.prototype.start = function () {
 
   connectionSub.on('message', function (channel, msg) {
 
-    console.log('MESSAGE: ' + msg);
-
     if (channel === process.env.CHANNEL_HELLO && msg !== 'Hello') {
       queueHelper.updateScore(function (id) {
         if (id !== undefined) {
           Process.update({ _id: id }, { states: 'PROCESSING' }, function () {});
-          SocketEmitter.sendMsg(id, 'PROCESSING');
         }
       });
     }
 
     if (channel === process.env.CHANNEL_FREE ) {
 
-      console.log('JOB FINISHED');
-      var splitted = msg.split('::');
+      console.log('JOB FINISHED: ' + msg);
+      var splitted = msg.split(':');
       var id = splitted[0];
       var status = splitted[1];
 
@@ -44,7 +42,7 @@ PubSub.prototype.start = function () {
         },
         function (cb) {
           Process.update({ _id: id }, { states: status }, function () {
-          SocketEmitter.sendMsg(id, status);
+          //SocketEmitter.sendMsg(id, status);
             cb();
           });
         }
@@ -52,7 +50,6 @@ PubSub.prototype.start = function () {
         queueHelper.updateScore(function (id) {
           if (id !== undefined) {
             Procces.update({ _id: id }, { states: 'PROCESSING' }, function () {});
-            SocketEmitter.sendMsg(id, 'PROCESSING');
           }
         });
       });

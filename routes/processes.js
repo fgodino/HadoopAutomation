@@ -6,18 +6,17 @@ var Job = require('../models/Job');
 var Dataset = require('../models/Dataset');
 var async = require('async');
 var queueHelper = require('../api/queueHelper.js');
-var SocketEmitter = require('../api/socketEmitter.js');
 var redis = require('redis');
-var redisCli = require('../connections').redisDB;
-
-var username = "fgodino";
+var connections = require('../connections');
+var redisCli = connections.redisDB;
+var s3 = connections.s3;
 
 router.post('/', function (req, res) {
 
 	var body = req.body;
 
 	var process = new Process ({
-		owner: username,
+		owner: req.session.name,
 		name: body.name,
 		dataset: body.datasetID,
 		job: body.jobID,
@@ -44,10 +43,11 @@ router.post('/', function (req, res) {
 			queueHelper.updateScore(function (id) {
 				if(id !== undefined) {
 					Process.update({ _id: id }, { states: 'PROCESSING' }, function () {
-						SocketEmitter.sendMsg(id, 'PROCESSING');
 						cb();
 					});
 				}
+
+				cb();
 			});
 		}
 	], function (err, id, nodes) {
@@ -62,7 +62,7 @@ router.get('/', function(req, res){
 		function (cb) {
 			Job
 			.find()
-				.or([{owner : username}, {public : true}])
+				.or([{owner : req.session.name}, {public : true}])
 					.exec(function(err, result){
 					if(err){
 						cb(err);
@@ -74,7 +74,7 @@ router.get('/', function(req, res){
 		function (cb) {
 			Dataset
 			.find()
-				.or([{owner : username}, {public : true}])
+				.or([{owner : req.session.name}, {public : true}])
 					.exec(function(err, result){
 					if(err){
 						cb(err);
@@ -85,7 +85,7 @@ router.get('/', function(req, res){
 		},
 		function (cb) {
 			Process
-			.find({owner: username})
+			.find({owner: req.session.name})
     		.exec(function(err, result){
         	console.log(err);
 				if(err){
@@ -123,11 +123,12 @@ router.get('/:id', function(req, res){
         };
 
 		s3.headObject(params, function(err, info) {
+			console.log(params);
 			if(err) return res.send(500);
 	        var stream = s3.getObject(params).createReadStream();
 			res.set({
 				'Content-Type': 'application/octet-stream',
-				'Content-Disposition' : 'attachment; filename="' + info.Metadata.filename + '"',
+				'Content-Disposition' : 'attachment; filename="' + process.name + '-result.zip"',
 				'Content-Length' : info.ContentLength
 		  	});
 			stream.pipe(res);
@@ -140,7 +141,7 @@ router.get('/:id', function(req, res){
 router.delete('/:id', function (req, response) {
 
     Process.findById(req.params.id, function (err, process) {
-        if(process.owner !== username) {
+        if(process.owner !== req.session.name) {
             res.sendStatus(401);
         } else {
             Process.findByIdAndRemove(req.params.id, function (err) {

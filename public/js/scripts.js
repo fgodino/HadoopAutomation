@@ -38,7 +38,7 @@ var downloadJob = function (elem) {
 }
 
 var downloadProcess = function (elem) {
-  var url = '/processes' + elem.value;
+  var url = '/processes/' + elem.value;
   window.location.href = url;
 }
 
