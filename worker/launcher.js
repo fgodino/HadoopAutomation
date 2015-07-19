@@ -56,7 +56,7 @@ function startProcess(info, callback){
 			f.call(worker, cb);
 		}
 	}), function(err){
-		connections.redisDB.publish(process.env.CHANNEL_FREE, [info.process, (err) ? 'FAILED' : 'SUCESS'].join(':'));
+		connections.redisDB.publish(process.env.CHANNEL_FREE, [info.process, (err) ? 'FAILED' : 'SUCCESS'].join(':'));
 	});
 }
 
