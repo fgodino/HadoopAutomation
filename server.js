@@ -74,7 +74,8 @@ app.use('/', index);
 // start app ===============================================
 
 var connections = require('./connections');
-var pubSub = require('./api/pubSub.js')
+var pubSub = require('./api/pubSub.js');
+var SocketEmitter = require('./api/socketEmitter.js');
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),

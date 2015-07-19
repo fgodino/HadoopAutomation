@@ -20,17 +20,33 @@ var addWorkers = function (workers, callback) {
 var getWorkers = function (n, callback) {
 
   redisCli.smembers('availWorkers', function (err, workers) {
+    console.log('workers: ' + workers)
     if (workers.length < n) {
       callback();
     } else {
       workers = workers.slice(0, n);
+      console.log('workers2: ' + workers);
       redisCli.srem('availWorkers', workers, function (err, res) {
-        console.log('workers: ' + workers)
-        callback(workers);
+        callback(null, workers);
       });
     }
   });
 }
 
+/* Add free workes to the available workers list and
+    remove the key belonging to the process */
+var freeWorkers = function (id, callback) {
+
+  var key = 'workers:' + id;
+  redisCli.smembers(key, function (err, workers) {
+    redisCli.sadd('availWorkers', workers, function (err, res) {
+      redisCli.del(key, function (err, res) {
+        callback();
+      });
+    });
+  });
+}
+
 exports.addWorkers = addWorkers;
 exports.getWorkers = getWorkers;
+exports.freeWorkers = freeWorkers;

@@ -40,6 +40,7 @@ router.post('/', function(req, res){
     		name : data.name,
     		owner : username,
     		public : data.public || false,
+            classname: data.classname,
     		s3Bucket : req.app.get('s3 jobs bucket'),
     		s3Key : username + '/' + sanitize(data.name)
     	});

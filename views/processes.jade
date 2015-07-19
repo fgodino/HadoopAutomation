@@ -17,12 +17,18 @@ block body
               td Name
               td Nodes
               td Status
+              td Download
+              td Remove
           tbody
             each process in processes
               tr
                 td= process.name
                 td= process.nodes
-                td= process.states
+                td(id=process._id)= process.states
+                td
+                  button.btn.btn-block.btn-sm(value=process._id onclick="downloadProcess(this)") Download process
+                td
+                  button.btn.btn-block.btn-danger.btn-sm(value=process._id onclick="deleteProcess(this)") Remove process
 
   div#newProcess.container-fluid(style="display:none")
     form(method="post" action="/processes")

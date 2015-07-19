@@ -9,67 +9,10 @@ html(lang='en')
       meta(name='viewport' content='width=device-width, initial-scale=1')
       script(type="text/javascript" src="/bower_components/jquery/dist/jquery.min.js")
       script(type='text/javascript' src='/bower_components/bootstrap/dist/js/bootstrap.min.js')
-      script(type='text/javascript' src='/public/js/scripts.js')
+      script(src="https://cdn.socket.io/socket.io-1.2.0.js")
+      script(type='text/javascript' src='/js/scripts.js')
       link(rel="stylesheet" href="/bower_components/bootstrap/dist/css/bootstrap.min.css")
       link(rel="stylesheet" href="/css/main.css")
   body
     include ./header.jade
     block body
-
-script(type="text/javascript").
-  var addProcess = function () {
-    console.log('entra')
-    $('#showProcesses').hide();
-    $('#newProcess').show();
-  }
-
-script(type="text/javascript").
-  var addJob = function () {
-    console.log('entra')
-    $('#showJobs').hide();
-    $('#newJob').show();
-  }
-
-script(type="text/javascript").
-  var addDataset = function () {
-    console.log('entra')
-    $('#showDatasets').hide();
-    $('#newDataset').show();
-  }
-
-script(type="text/javascript").
-  var downloadDataset = function (elem) {
-    var url = '/datasets/' + elem.value;
-    window.location.href = url;
-  }
-
-script(type="text/javascript").
-  var downloadJob = function (elem) {
-    var url = '/jobs/' + elem.value;
-    window.location.href = url;
-  }
-
-script(type="text/javascript").
-  var deleteJob = function (elem) {
-    var url = '/jobs/' + elem.value;
-    $.ajax({
-    url: url,
-      type: 'DELETE',
-      success: function(result) {
-        location.reload();
-      }
-    });
-  }
-
-script(type="text/javascript").
-  var deleteDataset = function (elem) {
-    var url = '/datasets/' + elem.value;
-    console.log(url);
-    $.ajax({
-    url: url,
-      type: 'DELETE',
-      success: function(result) {
-        location.reload();
-      }
-    });
-  }

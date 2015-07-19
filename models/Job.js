@@ -7,6 +7,7 @@ var jobSchema = mongoose.Schema({
     owner : { type : String, required : true },
     name : { type : String, required : true },
     public : { type : Boolean, default : false },
+    classname: { type : String, required : true },
     s3Bucket : String,
     s3Key : String
 });
