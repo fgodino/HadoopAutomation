@@ -36,11 +36,11 @@ router.post('/', function(req, res){
 
     	var job = new Job({
     		name : data.name,
-    		owner : username,
+    		owner : req.session.name,
     		public : data.public || false,
             classname: data.classname,
     		s3Bucket : req.app.get('s3 jobs bucket'),
-    		s3Key : username + '/' + sanitize(data.name)
+    		s3Key : req.session.name + '/' + sanitize(data.name)
     	});
 
     	async.waterfall([
@@ -95,7 +95,7 @@ router.get('/', function(req, res){
 
 	Job
 		.find()
-		.or([{owner : username}, {public : true}])
+		.or([{owner : req.session.name}, {public : true}])
 		.exec(function(err, result){
 			if(err){
 				return res.sendStatus(500);
@@ -139,7 +139,7 @@ router.get('/:id', function(req, res){
 router.delete('/:id', function (req, res) {
 
     Job.findById(req.params.id, function (err, job) {
-        if(job.owner !== username) {
+        if(job.owner !== req.session.name) {
             res.sendStatus(401);
         } else {
             Job.findByIdAndRemove(req.params.id, function (err) {

@@ -51,11 +51,18 @@ app.use(session({
   resave: false,
   saveUninitialized: true
 }));
-app.use(cas_validate.ticket(cas_config));
-app.use(cas_validate.check_and_return(cas_config));
+app.use(function(req, res, next) {
+  console.log(req.session);
+  next();
+});
+
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
+app.use('/signout', cas_validate.logout(cas_config));
+app.use(cas_validate.ssoff());
+app.use(cas_validate.ticket(cas_config));
+app.use(cas_validate.check_or_redirect(cas_config));
 app.use(busboy());
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('views', path.join(__dirname, 'views'));
@@ -65,7 +72,8 @@ var datasets = require('./routes/datasets.js');
 var jobs = require('./routes/jobs.js');
 var processes = require('./routes/processes.js');
 
-app.use('/logout', cas_validate.logout(cas_config));
+
+
 app.use('/datasets', datasets);
 app.use('/jobs', jobs);
 app.use('/processes', processes);
@@ -75,7 +83,7 @@ app.use('/', index);
 
 var connections = require('./connections');
 var pubSub = require('./api/pubSub.js');
-var SocketEmitter = require('./api/socketEmitter.js');
+//var SocketEmitter = require('./api/socketEmitter.js');
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),

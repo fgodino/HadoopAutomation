@@ -7,8 +7,6 @@ var sanitize = require("sanitize-filename");
 
 var s3 = require('../connections').s3;
 
-var username = "fgodino";
-
 router.post('/', function(req, res){
 
 	var data = {}, buffer;
@@ -37,10 +35,10 @@ router.post('/', function(req, res){
 
     	var dataset = new Dataset({
     		name : data.name,
-    		owner : username,
+    		owner : req.session.name,
     		public : data.public || false,
     		s3Bucket : req.app.get('s3 datasets bucket'),
-    		s3Key : username + '/' + sanitize(data.name)
+    		s3Key : req.session.name + '/' + sanitize(data.name)
     	});
 
     	async.waterfall([
@@ -101,7 +99,7 @@ router.get('/', function(req, res){
 
 	Dataset
 	.find(filters)
-	.or([{owner : username}, {public : true}])
+	.or([{owner : req.session.name}, {public : true}])
     .exec(function(err, result){
         console.log(err);
 		if(err){
@@ -133,7 +131,7 @@ router.get('/:id', function(req, res){
             var stream = s3.getObject(params).createReadStream();
             res.set({
                 'Content-Type': 'application/octet-stream',
-                'Content-Disposition' : 'attachment; filename="' + info.Metadata.filename + '"',
+                'Content-Disposition' : 'attachment; filename="' + dataset.name + '"',
                 'Content-Length' : info.ContentLength
             });
             stream.pipe(res);
@@ -146,7 +144,7 @@ router.get('/:id', function(req, res){
 router.delete('/:id', function (req, res) {
 
     Dataset.findById(req.params.id, function (err, dataset) {
-        if(dataset.owner !== username) {
+        if(dataset.owner !== req.session.name) {
             res.sendStatus(401);
         } else {
             Dataset.findByIdAndRemove(req.params.id, function (err) {

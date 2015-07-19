@@ -20,12 +20,10 @@ var addWorkers = function (workers, callback) {
 var getWorkers = function (n, callback) {
 
   redisCli.smembers('availWorkers', function (err, workers) {
-    console.log('workers: ' + workers)
     if (workers.length < n) {
       callback();
     } else {
       workers = workers.slice(0, n);
-      console.log('workers2: ' + workers);
       redisCli.srem('availWorkers', workers, function (err, res) {
         callback(null, workers);
       });
