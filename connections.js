@@ -45,7 +45,7 @@ var Connections = function() { //Emmiter for async operations
           cb();
         });
 
-        self.redisDB.once('error', function () {
+        self.redisDB.once('error', function (err) {
           console.log(err);
         });
       },

@@ -21,8 +21,8 @@ var processSchema = mongoose.Schema({
     dataset: { type: mongoose.Schema.Types.ObjectId, ref: 'Dataset' },
     job: { type: mongoose.Schema.Types.ObjectId, ref: 'Job' },
     nodes : { type : Number, default : 1 },
-    s3Key: String,
-    S3Bucket: String
+    s3Bucket : String,
+    s3Key : String
 });
 
 processSchema.pre('save', function (next) {
