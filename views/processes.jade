@@ -27,7 +27,7 @@ block body
                 td= process.nodes
                 td.status= process.states
                 td
-                  button.btn.btn-block.btn-sm(value=process._id onclick="downloadProcess(this)") Download process
+                  button.btn.btn-block.btn-sm(disabled=(process.states=='SUCCESS' value=process._id onclick="downloadProcess(this)") Download process
                 td
                   button.btn.btn-block.btn-danger.btn-sm(value=process._id onclick="deleteProcess(this)") Remove process
                 td

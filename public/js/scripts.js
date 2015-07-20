@@ -1,3 +1,37 @@
+function()(
+
+var Notification = window.Notification || window.mozNotification || window.webkitNotification;
+
+Notification.requestPermission(function (permission) {
+
+});
+
+function showNotification(name) {
+  
+  var instance = new Notification(
+    "Process finished", {
+      body: "Process " + name + " finished",
+      icon: "/img/iitlogo.png"
+    }
+  );
+
+  instance.onclick = function () {
+    // Something to do
+  };
+  instance.onerror = function () {
+    // Something to do
+  };
+  instance.onshow = function () {
+    // Something to do
+  };
+  instance.onclose = function () {
+    // Something to do
+  };
+
+  return false;
+}
+
+
 var socket = io();
 
 socket.on('updateStatus', function (msg) {
@@ -78,3 +112,4 @@ var deleteProcess = function (elem) {
     }
   });
 }
+)();
