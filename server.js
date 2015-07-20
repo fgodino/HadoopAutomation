@@ -3,8 +3,8 @@ var express       = require('express');
 var app           = express();
 var bodyParser    = require('body-parser');
 var cookieParser  = require('cookie-parser');
-var session       = require('express-session')
-var RedisStore    = require('connect-redis')(session);
+var Session       = require('express-session')
+var RedisStore    = require('connect-redis')(Session);
 var busboy 		  = require('connect-busboy');
 var morgan		  = require('morgan');
 var path		  = require('path');
@@ -45,12 +45,16 @@ var cas_config = {
 };
 
 app.use(cookieParser(secret));
-app.use(session({
+
+var session = Session({
   store: new RedisStore({}),
   secret: secret,
   resave: false,
   saveUninitialized: true
-}));
+});
+
+app.use(session);
+
 app.use(function(req, res, next) {
   console.log(req.session);
   next();
@@ -95,7 +99,7 @@ connections.on('connected', function(){
     var server = https.createServer(httpsOptions, app).listen(app.get('port'), function() {
 	    console.log("Using " + app.get('env').toUpperCase() + " connection settings");
 	    console.log("Listening on port " + app.get('port'));
-      socketEmitter.createServer(server);
+      socketEmitter.createServer(server, session);
       pubSub.start();
 	});
 });

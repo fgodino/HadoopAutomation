@@ -156,7 +156,7 @@ router.delete('/:id', function (req, response) {
     });
 });
 
-router.put('/:id', function (res, response) {
+router.put('/:id', function (req, response) {
 
 	Process.findById(req.params.id, function (err, process) {
 		if (process.owner !== req.session.name) {
@@ -165,12 +165,17 @@ router.put('/:id', function (res, response) {
 			async.series([
 				function (cb) {
 					Process.update({ _id: process.id }, { states: 'WAITING' }, function () {
-						socketEmitter.sendMsg(id, 'WAITING');
+						socketEmitter.sendMsg(req.session.name, process.id, 'WAITING');
 						cb();
 					});
 				},
 				function (cb) {
-					queueHelper.addProcess(process.id, process.nodes, function () {
+					var elem = {
+						id: process.id,
+						nodes: process.nodes
+					};
+
+					queueHelper.addProcess(elem, function () {
 						cb();
 					});
 				},
@@ -178,6 +183,7 @@ router.put('/:id', function (res, response) {
 					queueHelper.updateScore(function (id) {
 						if(id !== undefined) {
 							Process.update({ _id: id }, { states: 'PROCESSING' }, function () {
+								socketEmitter.sendMsg(req.session.name, process.id, 'PROCESSING');
 								cb();
 							});
 
@@ -188,7 +194,7 @@ router.put('/:id', function (res, response) {
 					});
 				}
 			], function (err, res) {
-				res.redirect('/processes');
+				responsem.redirect('/processes');
 			});
 		}
 	});

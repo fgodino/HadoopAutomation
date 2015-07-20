@@ -22,7 +22,11 @@ PubSub.prototype.start = function () {
     if (channel === process.env.CHANNEL_HELLO && msg !== 'Hello') {
       queueHelper.updateScore(function (id) {
         if (id !== undefined) {
-          Process.update({ _id: id }, { states: 'PROCESSING' }, function () {});
+          Process.findById(id, function (err, proc) {
+            proc.states = 'PROCESSING';
+            proc.save();
+            socketEmitter.sendMsg(proc.owner, id, 'PROCESSING');
+          });
         }
       });
     }
@@ -41,15 +45,21 @@ PubSub.prototype.start = function () {
           })
         },
         function (cb) {
-          Process.update({ _id: id }, { states: status }, function () {
-          socketEmitter.sendMsg(id, status);
+          Process.findById(id, function (err, proc) {
+            proc.states = status;
+            proc.save();
+            socketEmitter.sendMsg(proc.owner, id, status);
             cb();
           });
         }
       ], function (err, res) {
         queueHelper.updateScore(function (id) {
           if (id !== undefined) {
-            Procces.update({ _id: id }, { states: 'PROCESSING' }, function () {});
+            Process.findById(id, function (err, proc) {
+              proc.states = 'PROCESSING';
+              proc.save();
+              socketEmitter.sendMsg(proc.owner, id, 'PROCESSING');
+            });
           }
         });
       });
