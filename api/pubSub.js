@@ -5,7 +5,7 @@ var connectionSub = require('../connections.js').clientSub;
 var connectionPub = require('../connections.js').redisDB;
 var async = require('async');
 var Process = require('../models/Process');
-//var SocketEmitter = require('./socketEmitter.js');
+var socketEmitter = require('./socketEmitter.js');
 
 var PubSub = function (connectionPub, connectionSub) {
 
@@ -42,7 +42,7 @@ PubSub.prototype.start = function () {
         },
         function (cb) {
           Process.update({ _id: id }, { states: status }, function () {
-          //SocketEmitter.sendMsg(id, status);
+          socketEmitter.sendMsg(id, status);
             cb();
           });
         }

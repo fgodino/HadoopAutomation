@@ -21,10 +21,10 @@ block body
               td Remove
           tbody
             each process in processes
-              tr
+              tr(id=process._id)
                 td= process.name
                 td= process.nodes
-                td(id=process._id)= process.states
+                td.status= process.states
                 td
                   button.btn.btn-block.btn-sm(disabled=(process.states=='SUCCESS' value=process._id onclick="downloadProcess(this)") Download process
                 td
