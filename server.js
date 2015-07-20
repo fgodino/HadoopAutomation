@@ -83,7 +83,7 @@ app.use('/', index);
 
 var connections = require('./connections');
 var pubSub = require('./api/pubSub.js');
-//var SocketEmitter = require('./api/socketEmitter.js');
+var socketEmitter = require('./api/socketEmitter.js');
 
 var httpsOptions = {
 	key : fs.readFileSync('./keys/hadoopAutomation-key.pem'),
@@ -92,9 +92,10 @@ var httpsOptions = {
 
 connections.on('connected', function(){
     http.createServer(app).listen(80);
-	https.createServer(httpsOptions, app).listen(app.get('port'), function() {
+    var server = https.createServer(httpsOptions, app).listen(app.get('port'), function() {
 	    console.log("Using " + app.get('env').toUpperCase() + " connection settings");
 	    console.log("Listening on port " + app.get('port'));
+      socketEmitter.createServer(server);
       pubSub.start();
 	});
 });

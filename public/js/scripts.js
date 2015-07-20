@@ -6,7 +6,9 @@ socket.on('updateStatus', function (msg) {
   var id = splitted[0];
   var state = splitted[1];
 
-  $(id).val(state);
+  console.log(state);
+
+  $('#' + id + ' .status').text(state);
 });
 
 var addProcess = function () {
