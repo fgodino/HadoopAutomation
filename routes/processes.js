@@ -10,6 +10,7 @@ var redis = require('redis');
 var connections = require('../connections');
 var redisCli = connections.redisDB;
 var s3 = connections.s3;
+var socketEmitter = require('../api/socketEmitter.js')
 
 router.post('/', function (req, res) {
 
@@ -154,4 +155,43 @@ router.delete('/:id', function (req, response) {
         }
     });
 });
+
+router.put('/:id', function (res, response) {
+
+	Process.findById(req.params.id, function (err, process) {
+		if (process.owner !== req.session.name) {
+			res.sendStatus(401);
+		} else {
+			async.series([
+				function (cb) {
+					Process.update({ _id: process.id }, { states: 'WAITING' }, function () {
+						socketEmitter.sendMsg(id, 'WAITING');
+						cb();
+					});
+				},
+				function (cb) {
+					queueHelper.addProcess(process.id, process.nodes, function () {
+						cb();
+					});
+				},
+				function (cb) {
+					queueHelper.updateScore(function (id) {
+						if(id !== undefined) {
+							Process.update({ _id: id }, { states: 'PROCESSING' }, function () {
+								cb();
+							});
+
+							return;
+						}
+
+						cb();
+					});
+				}
+			], function (err, res) {
+				res.redirect('/processes');
+			});
+		}
+	});
+});
+
 module.exports = router;

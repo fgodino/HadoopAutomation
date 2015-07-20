@@ -19,16 +19,19 @@ block body
               td Status
               td Download
               td Remove
+              td Relaunch
           tbody
             each process in processes
               tr(id=process._id)
-                td= process.name
+                td.nameProcess= process.name
                 td= process.nodes
                 td.status= process.states
                 td
                   button.btn.btn-block.btn-sm(value=process._id onclick="downloadProcess(this)") Download process
                 td
                   button.btn.btn-block.btn-danger.btn-sm(value=process._id onclick="deleteProcess(this)") Remove process
+                td
+                  button.btn.btn-block.btn-danger.btn-sm(value=process._id onclick="deleteProcess(this)" disabled=(process.states === 'WAITING' || process.states === 'PROCESSING')) Relaunch process
 
   div#newProcess.container-fluid(style="display:none")
     form(method="post" action="/processes")
